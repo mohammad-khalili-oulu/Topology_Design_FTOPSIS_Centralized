@@ -92,10 +92,10 @@ def run_iteration(args):
 
 
 def main():
-    vlc_aps_values = [2,4,6]
-    rf_aps_values = [2]
-    nodes_values = [4, 6]
-    run_count = 10
+    vlc_aps_values = [2,4,6,8,10]
+    rf_aps_values = [2,4,6,8,10]
+    nodes_values = [5,10,15,20,25,30,35,40,45,50]
+    run_count = 64
 
     # Create a multiprocessing pool before the loop
     pool = multiprocessing.Pool(processes = num_process)
