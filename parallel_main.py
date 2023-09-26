@@ -40,15 +40,16 @@ class nodes_constants:
 
 
 #for ecntrall Fuzzy TOPSIS approach
+#up_margin_list_vlc (C1), up_margin_list_radio (C2), negative_margin_count(disregard!), unused_ap_vlc, unused_ap_rf, #rate of VLC to radio (C6), #Distances (C7, C8) 
 
-up_impact = [1, 1, 1, 1, 0, 0]
+up_impact = [1, 1, 1, 1, 1, 0, 0]
 
 
-down_impact = [1, 1, 1, 1, 0, 0]
+down_impact = [1, 1, 1, 1, 1, 0, 0]
 
 # Example usage
 env_size = (100, 100, 3) #env_size_x, env_size_y, env_size_z
-num_process = 4
+num_process = 64
 
 
 def run_iteration(args):
@@ -64,7 +65,19 @@ def run_iteration(args):
         simulator.create_nodes(env_size, nodes_constants)
         simulator.connect_nodes_to_aps()
         
-        up_bestcosts, up_best_combination, upcount, down_bestcosts, down_best_combination, downcount, unused_vlc, unused_rf = simulator.gen_all_topo_return_best_new( up_impact, down_impact)
+        results_greedy = []
+        results_greedy.extend([num_vlc_aps, num_rf_aps, num_nodes, count])
+        C1, C2, C3, C4, C5, C6, C7, C8 = simulator.ggreedy()
+        results_greedy.extend(C1)
+        results_greedy.extend(C2)
+        results_greedy.extend(C4)
+        results_greedy.extend(C5)
+        results_greedy.extend(C6)
+        results_greedy.extend(C8)
+        # Write results to a file
+        write2file_sep2(results_greedy)
+        
+        up_bestcosts, up_best_combination, upcount, down_bestcosts, down_best_combination, downcount, unused_vlc_up, unused_rf_up, down_unused_vlc, down_unused_rf  = simulator.gen_all_topo_return_best_new( up_impact, down_impact)
         
         total_count = upcount * downcount if upcount is not None and downcount is not None else None
         
@@ -82,7 +95,7 @@ def run_iteration(args):
         logging.info(f"Execution time: {execution_time:.6f} seconds")
         
         results = addtoresults(up_bestcosts, down_bestcosts, results, 3* len(up_impact))
-        results.extend([upcount, downcount, total_count, round(execution_time, 2), unused_vlc, unused_rf])
+        results.extend([upcount, downcount, total_count, round(execution_time, 2), unused_vlc_up, unused_rf_up, down_unused_vlc, down_unused_rf])
         # Write results to a file
         write2file_sep(results)
         
@@ -94,8 +107,8 @@ def run_iteration(args):
 def main():
     vlc_aps_values = [2,4,6,8,10]
     rf_aps_values = [2,4,6,8,10]
-    nodes_values = [5,10,15,20,25,30,35,40,45,50]
-    run_count = 64
+    nodes_values = [5,10,15,20,25]
+    run_count = 200
 
     # Create a multiprocessing pool before the loop
     pool = multiprocessing.Pool(processes = num_process)

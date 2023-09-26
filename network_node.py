@@ -26,8 +26,12 @@ class Node:
         self.req_down_data_rate = random_number_in_range(nodes_constants.min_req_down_data_rate , nodes_constants.max_req_down_data_rate )
         self.req_up_data_rate = random_number_in_range(nodes_constants.min_req_up_data_rate, nodes_constants.max_req_up_data_rate)
         self.node_name = "n" + str(self.node_id)
-        self.uplink_options = []
-        self.downlink_options = []
+        self.uplink_options_all = []
+        self.downlink_options_all = []
+        self.uplink_options_gr = []
+        self.downlink_options_gr = []
+        self.req_down_data_rate_gr = self.req_down_data_rate
+        self.req_up_data_rate_gr = self.req_up_data_rate
         
     def calculate_distance(self, loc):
         x1, y1, z1 = self.location

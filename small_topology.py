@@ -26,17 +26,17 @@ class LightTopology:
     def generate_combinations(self, links, current_node, current_combination, best_combination, bestcosts, up_down):
         if current_node == len(links):
             if  bestcosts.get("best", -1) == -1:
-                C1, C2, C3, C4, C5 , C6, C7 = self.all_costs(current_combination ,up_down)
-                bestcosts["best"] = [C1, C2, C4, C5 , C6, C7]  # a topology considered and save it
+                C1, C2, C3, C4, C5 , C6, C7, C8 = self.all_costs(current_combination ,up_down)
+                bestcosts["best"] = [C1, C2, C4, C5 , C6, C7, C8]  # a topology considered and save it
                 best_combination.clear()
                 best_combination.extend(current_combination)
             else: 
                 costs_of_two = []
                 costs_of_two.append(bestcosts["best"])
-                C1, C2, C3, C4, C5 , C6, C7 = self.all_costs(current_combination ,up_down)
+                C1, C2, C3, C4, C5 , C6, C7, C8 = self.all_costs(current_combination ,up_down)
                 if C3 > 0:
                     return
-                costs_of_two.append([C1, C2, C4, C5 , C6, C7] )
+                costs_of_two.append([C1, C2, C4, C5 , C6, C7, C8] )
                 costs = self.convert2c(costs_of_two, self.num_criteria, 2)
                 best_cc = [0 for i in range(2)]
                 c_array_cc = (c_double * len(best_cc))(*best_cc)
@@ -44,7 +44,6 @@ class LightTopology:
                 best_cc = list(c_array_cc)
                 
                 if best_cc[0] < best_cc[1]:
-                    
                     bestcosts["best"] = costs_of_two[1]
                     best_combination.clear()
                     best_combination.extend(current_combination)
@@ -80,80 +79,93 @@ class LightTopology:
     def all_costs(self, links, up_down):
         if up_down == 0:
             self.upcount += 1
-            C1, C2, C3, C4 = self.up_margin_computation(links) #up_margin_list_vlc, up_margin_list_radio, negative_margin_count, unused_ap
-            C5  = self.up_price_computation( links) #rate of VLC to radio
-            C6, C7 = self.up_distance_computation(links) #Distances
-            return C1, C2, C3, C4, C5 , C6, C7
+            C1, C2, C3, C4, C5 = self.up_available_computation(links) #up_available_list_vlc, up_available_list_radio, negative_available_count, unused_ap_vlc, unused_ap_rf
+            C6  = self.up_price_computation( links) #rate of VLC to radio
+            C7, C8 = self.up_distance_computation(links) #Distances
+            return C1, C2, C3, C4, C5 , C6, C7, C8
         else:
             self.downcount += 1
-            C1, C2, C3, C4 = self.down_margin_computation(links)
-            C5  = self.down_price_computation( links)
-            C6, C7 = self.down_distance_computation(links)
-            return C1, C2, C3, C4, C5 , C6, C7
+            C1, C2, C3, C4, C5 = self.down_available_computation(links)
+            C6  = self.down_price_computation( links)
+            C7, C8 = self.down_distance_computation(links)
+            return C1, C2, C3, C4, C5 , C6, C7, C8
             
-    def up_margin_computation(self, links):
-        up_margin_list_vlc = []
-        up_margin_list_radio = []
-        negative_margin_count = 0
+    def up_available_computation(self, links):
+        up_available_list_vlc = []
+        up_available_list_radio = []
+        negative_available_count = 0
         used_data = {}
-        unused_ap = 0
+        unused_ap_vlc = 0.
+        unused_ap_rf = 0.
+        
         # Calculate the used data for each node
         for upl in links:
             used_data[upl[1]] = used_data.get(upl[1], 0) - self.up_data_rate.get(upl[0], 0)
 
-        # Calculate up margins for access points
+        # Calculate up availables for access points
         for ap in self.aps:
             if used_data.get(ap.node_name, 0) != 0:
-                upmargin = ap.max_data_rate_rx + used_data.get(ap.node_name, 0)
+                upavailable = ap.max_data_rate_rx + used_data.get(ap.node_name, 0)
                 
-                if upmargin < 0:
-                    negative_margin_count += 1
+                if upavailable < 0:
+                    negative_available_count += 1
                 
                 if ap.nodetype == 'VLC':
-                    up_margin_list_vlc.append(upmargin)
+                    up_available_list_vlc.append(upavailable)
                 else:
-                    up_margin_list_radio.append(upmargin)
+                    up_available_list_radio.append(upavailable)
             else:
-                unused_ap += 1
-        C1 = set2fuzzy(up_margin_list_vlc)
-        C2 = set2fuzzy(up_margin_list_radio)
-        #C3 = set2fuzzy([negative_margin_count])
-        C3 = negative_margin_count
-        C4 = set2fuzzy([unused_ap])
+                if ap.nodetype == 'VLC':
+                    unused_ap_vlc += 1
+                else:
+                    unused_ap_rf += 1
                     
-        return C1, C2, C3, C4
+        C1 = set2fuzzy(up_available_list_vlc)
+        C2 = set2fuzzy(up_available_list_radio)
+        #C3 = set2fuzzy([negative_available_count])
+        C3 = negative_available_count
+        C4 = set2fuzzy([unused_ap_vlc])
+        C5 = set2fuzzy([unused_ap_rf])
+                    
+        return C1, C2, C3, C4, C5
     
-    def down_margin_computation(self, links):
-        down_margin_list_vlc = []
-        down_margin_list_radio = []
-        negative_margin_count = 0
+    def down_available_computation(self, links):
+        down_available_list_vlc = []
+        down_available_list_radio = []
+        negative_available_count = 0
         used_data = {}
-        unused_ap = 0.
+        unused_ap_vlc = 0.
+        unused_ap_rf = 0.
         
         # Calculate the used data for each node
         for dwl in links:
             used_data[dwl[0]] = used_data.get(dwl[0], 0) - self.down_data_rate.get(dwl[1], 0)
 
-        # Calculate down margins for access points
+        # Calculate down availables for access points
         for ap in self.aps:
             if used_data.get(ap.node_name, 0) != 0:
-                downmargin = ap.max_data_rate_tx + used_data.get(ap.node_name, 0)
+                downavailable = ap.max_data_rate_tx + used_data.get(ap.node_name, 0)
                 
-                if downmargin < 0:
-                    negative_margin_count += 1
+                if downavailable < 0:
+                    negative_available_count += 1
                 
                 if ap.nodetype == 'VLC':
-                    down_margin_list_vlc.append(downmargin)
+                    down_available_list_vlc.append(downavailable)
                 else:
-                    down_margin_list_radio.append(downmargin)
+                    down_available_list_radio.append(downavailable)
             else:
-                unused_ap += 1
-        C1 = set2fuzzy(down_margin_list_vlc)
-        C2 = set2fuzzy(down_margin_list_radio)
-        #C3 = set2fuzzy([negative_margin_count])
-        C3 = negative_margin_count
-        C4 = set2fuzzy([unused_ap])
-        return C1, C2, C3, C4
+                if ap.nodetype == 'VLC':
+                    unused_ap_vlc += 1
+                else:
+                    unused_ap_rf += 1
+                    
+        C1 = set2fuzzy(down_available_list_vlc)
+        C2 = set2fuzzy(down_available_list_radio)
+        #C3 = set2fuzzy([negative_available_count])
+        C3 = negative_available_count
+        C4 = set2fuzzy([unused_ap_vlc])
+        C5 = set2fuzzy([unused_ap_rf])
+        return C1, C2, C3, C4, C5
     
     
     def up_price_computation(self, uplinks):

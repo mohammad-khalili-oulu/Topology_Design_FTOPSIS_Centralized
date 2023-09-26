@@ -138,7 +138,7 @@ void f_topsis( int n, int m, FuzzyNumber all_ratings[][m], int impact[], double 
     fuzzy_w_norm_fun( n, m, fuzzy_norm_matrix, weight, fuzzy_w_norm_matrix);
 
     FuzzyNumber fpis[m], fnis[m];
-    for (int j = 0; j < n; j++) {
+    for (int j = 0; j < m; j++) {
         fuzzy_min_max(n, m, j, fuzzy_w_norm_matrix, &fpis[j], &fnis[j]);
     }
 

@@ -17,6 +17,9 @@ class AccessPoint:
         self.max_data_rate_tx = APs_constants.max_tx_data_rate_RF if nodetype == "RF" else APs_constants.max_tx_data_rate_VLC
         self.nodetype = nodetype
         self.node_name = self.typemap() + str(self.node_id)
+        self.available_data_down = self.max_data_rate_tx
+        self.available_data_up = self.max_data_rate_rx
+        
 
     def typemap(self):
         """

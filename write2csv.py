@@ -38,3 +38,15 @@ def write2file_sep( data):
         with open(csv_file_path, mode='a', newline='') as csv_file:
             writer = csv.writer(csv_file, quoting=csv.QUOTE_NONE)
             writer.writerows([data])
+
+def write2file_sep2( data):
+    
+    
+    # Specify the file path
+    csv_file_path = 'outputgreedy.csv'
+
+    # Write data to the CSV file
+    with file_lock:
+        with open(csv_file_path, mode='a', newline='') as csv_file:
+            writer = csv.writer(csv_file, quoting=csv.QUOTE_NONE)
+            writer.writerows([data])
